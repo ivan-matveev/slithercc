@@ -1,0 +1,75 @@
+slithercc
+=========
+
+Simple and light slither.io client written in C++ with SDL2 and boost websocket.
+
+image::slithercc.gif[]
+
+=== Game
+
+The snake follows the mouse pointer. Hold left mouse button to accelerate.
+
+Eat color dots and flying prey. If you hit other snake you die.
+If you go over game field border you die.
+
+Circle in the lower right corner is the game field map.
+Red dot represents your snake.
+Gray dots represent other snakes.
+
+=== Usage examples:
+```
+./slithercc
+
+./slithercc nickname=slithercc skin_id=5 window_size=1200x800 server=145.239.6.19:444
+```
+=== Options:
+
+"h" or "help" print help message.
+
+nickname=[your snake name]
+
+window_size=[[width]x[height]] - default: fullscreen
+
+server=[address:port] - default: connect to the first server in the list
+downloaded from slither.io.
+The list is saved to slithercc.server_list file
+
+skin_id=[0-38]
+
+record_file=[filename] - record the game to file
+
+play_file=[filename] - play recorded game from file
+
+Veiw recorded game replay in web browser with original slither.io client:
+```
+./slithercc_replay_server play_file=[record file]
+```
+
+Direct your browser to slither.io. After game start page is loaded enter
+debug console(press F12). Type:
+```
+forceServer("localhost", 8080)
+```
+Close debug console(press F12). Start the game.
+
+=== Build slithercc
+```
+apt-get -y install \
+	build-essential \
+	libboost-dev libboost-system-dev libboost-iostreams-dev \
+	libsdl2-dev libsdl2-image-dev libsdl2-ttf-dev
+```
+```
+make
+```
+
+=== Acknowledgments
+I would like to thank authors of
+
+https://github.com/ClitherProject/Slither.io-Protocol.git
+
+https://github.com/Mat2095/MySlither.git
+
+https://github.com/sitano/slitherss.git
+
+projects for the information on slither.io internals.
