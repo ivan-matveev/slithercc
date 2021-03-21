@@ -1,12 +1,5 @@
-
-# apt-get install libsdl2-dev
-# apt-get install libsdl2-ttf-dev
-# apt-get install libboost-system-dev
-
 ZLIB_LDFLAGS:=$(shell pkg-config --libs zlib)
 
-# -std=c++11 -fsanitize=address -lasan
-# -pg
 CXX_FLAGS += -Wall -Wextra -g -DRUN_TIME -Wno-narrowing
 CXX_FLAGS += -DNDEBUG
 # CXX_FLAGS += -DDEBUG_LOG
