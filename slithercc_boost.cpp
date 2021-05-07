@@ -49,7 +49,7 @@ void game_evt_rec(const void* data, size_t size)
 }
 
 typedef std::vector<uint8_t> pkt_vec_t;
-std::deque<pkt_vec_t> pkt_queue;
+static std::deque<pkt_vec_t> pkt_queue;
 std::mutex pkt_queue_lock;
 
 std::mutex rw_lock;
