@@ -85,7 +85,9 @@ void game_t::pkt_handle(const uint8_t* buf, size_t size)
 {
 // 	DPROFILE;
 	assert(size >= sizeof(pkt_hdr_t));
-	const pkt_hdr_t* pkt_hdr = reinterpret_cast<const pkt_hdr_t*>(buf);
+	pkt_hdr_t pkt_hdr_s;
+	memcpy(&pkt_hdr_s, buf, sizeof(pkt_hdr_s));
+	const pkt_hdr_t* pkt_hdr = &pkt_hdr_s;
 	const uint8_t pkt_type = static_cast<uint8_t>(pkt_hdr->packet_type);
 	buf += sizeof(pkt_hdr_t);
 	size -= sizeof(pkt_hdr_t);
@@ -156,33 +158,34 @@ void game_t::pkt_send(pkt_sender_t sender)
 void game_t::pkt_init(const uint8_t* buf, size_t size)
 {
 	if (size < sizeof(pkt_init_t)){ LOG("wrong size:%zu", size); return; }
-	const pkt_init_t* pkt_init = reinterpret_cast<const pkt_init_t*>(buf);
+	pkt_init_t pkt;
+	memcpy(&pkt, buf, sizeof(pkt));
 	LOG("%u %u %u %u %u %u %u %u %u %u %u %u",
-		be24toh(pkt_init->game_radius),
-		be16toh(pkt_init->mscps),
-		be16toh(pkt_init->sector_size),
-		be16toh(pkt_init->sector_count_along_edge),
-		pkt_init->spangdv,
-		be16toh(pkt_init->nsp1),
-		be16toh(pkt_init->nsp2),
-		be16toh(pkt_init->nsp3),
-		be16toh(pkt_init->mamu),
-		be16toh(pkt_init->manu2),
-		be16toh(pkt_init->cst),
-		pkt_init->protocol_version
+		be24toh(pkt.game_radius),
+		be16toh(pkt.mscps),
+		be16toh(pkt.sector_size),
+		be16toh(pkt.sector_count_along_edge),
+		pkt.spangdv,
+		be16toh(pkt.nsp1),
+		be16toh(pkt.nsp2),
+		be16toh(pkt.nsp3),
+		be16toh(pkt.mamu),
+		be16toh(pkt.manu2),
+		be16toh(pkt.cst),
+		pkt.protocol_version
 		);
 
-	config.game_radius = be24toh(pkt_init->game_radius);
-	config.mscps = be16toh(pkt_init->mscps); // maximum snake length in body parts units
-	config.sector_size = be16toh(pkt_init->sector_size);
-	config.spangdv = 1. * pkt_init->spangdv / 10;  // (value / 10) (coef. to calculate angular speed change depending snake speed) 	4.8 	4.8
-	config.nsp1 = 1. * be16toh(pkt_init->nsp1) / 100;  // (value / 100) (Maybe nsp stands for "node speed"?) 	4.25 	5.39
-	config.nsp2 = 1. * be16toh(pkt_init->nsp2) / 100;  // nsp2 (value / 100) 	0.5 	0.4
-	config.nsp3 = 1. * be16toh(pkt_init->nsp3) / 100;  // nsp3 (value / 100) 	12 	14
-	config.mamu = 1. * be16toh(pkt_init->mamu) / 1000;  // (value / 1E3) (basic snake angular speed) 	0.033 	0.033
-	config.manu2 = 1. * be16toh(pkt_init->manu2) / 1000;  // (value / 1E3) (angle in rad per 8ms at which prey can turn) 	0.028 	0.028
-	config.cst = 1. * be16toh(pkt_init->cst) / 1000;  // (value / 1E3) (snake tail speed ratio ) 	0.43 	0.43
-	config.protocol_version = pkt_init->protocol_version;
+	config.game_radius = be24toh(pkt.game_radius);
+	config.mscps = be16toh(pkt.mscps); // maximum snake length in body parts units
+	config.sector_size = be16toh(pkt.sector_size);
+	config.spangdv = 1. * pkt.spangdv / 10;  // (value / 10) (coef. to calculate angular speed change depending snake speed) 	4.8 	4.8
+	config.nsp1 = 1. * be16toh(pkt.nsp1) / 100;  // (value / 100) (Maybe nsp stands for "node speed"?) 	4.25 	5.39
+	config.nsp2 = 1. * be16toh(pkt.nsp2) / 100;  // nsp2 (value / 100) 	0.5 	0.4
+	config.nsp3 = 1. * be16toh(pkt.nsp3) / 100;  // nsp3 (value / 100) 	12 	14
+	config.mamu = 1. * be16toh(pkt.mamu) / 1000;  // (value / 1E3) (basic snake angular speed) 	0.033 	0.033
+	config.manu2 = 1. * be16toh(pkt.manu2) / 1000;  // (value / 1E3) (angle in rad per 8ms at which prey can turn) 	0.028 	0.028
+	config.cst = 1. * be16toh(pkt.cst) / 1000;  // (value / 1E3) (snake tail speed ratio ) 	0.43 	0.43
+	config.protocol_version = pkt.protocol_version;
 
 	score.set_mscps(config.mscps);
 	if (config.game_radius != game_radius ||
@@ -194,33 +197,38 @@ void game_t::pkt_init(const uint8_t* buf, size_t size)
 void game_t::pkt_sector_add(const uint8_t* buf, size_t size)
 {
 	if (size < sizeof(pkt_sector_add_t)){ LOG("wrong size:%zu", size); return; }
-	const pkt_sector_add_t* pkt = reinterpret_cast<const pkt_sector_add_t*>(buf);
-	sector_list.push_back(xy_t{pkt->x, pkt->y});
-	LOG(" %u:%u %u:%u", pkt->x, pkt->y, pkt->x * config.sector_size, pkt->y * config.sector_size);
+	pkt_sector_add_t pkt;
+	memcpy(&pkt, buf, sizeof(pkt));
+	sector_list.push_back(xy_t{pkt.x, pkt.y});
+	LOG(" %u:%u %u:%u", pkt.x, pkt.y, pkt.x * config.sector_size, pkt.y * config.sector_size);
 }
 
 // w
 void game_t::pkt_sector_rem(const uint8_t* buf, size_t size)
 {
 	if (size < sizeof(pkt_sector_rem_t)){ LOG("wrong size:%zu", size); return; }
-	const pkt_sector_rem_t* pkt = reinterpret_cast<const pkt_sector_rem_t*>(buf);
-	const xy_t sect_to_rm{pkt->x, pkt->y};
+	pkt_sector_rem_t pkt;
+	memcpy(&pkt, buf, sizeof(pkt));
+	const xy_t sect_to_rm{pkt.x, pkt.y};
 	sector_list.erase(std::remove(sector_list.begin(), sector_list.end(), sect_to_rm));
-	LOG(" %u:%u %u:%u", pkt->x, pkt->y, pkt->x * config.sector_size, pkt->y * config.sector_size);
+	LOG(" %u:%u %u:%u", pkt.x, pkt.y, pkt.x * config.sector_size, pkt.y * config.sector_size);
 }
 
 // F
 void game_t::pkt_food_set(const uint8_t* buf, size_t size)
 {
-	const pkt_food_set_t* pkt = reinterpret_cast<const pkt_food_set_t*>(buf);
-	const size_t pkt_cnt = size / sizeof(*pkt);
+	pkt_food_set_t pkt;
+	memcpy(&pkt, buf, sizeof(pkt));
+	const size_t pkt_cnt = size / sizeof(pkt);
 	LOG(" pkt_cnt:%zu size:%zu ", pkt_cnt, size);
-	size_t reminder = size % sizeof(*pkt);
+	size_t reminder = size % sizeof(pkt);
 	if (reminder != 0)
 		ERR("bad packet; reminder != 0");
 	for (size_t idx = 0; idx < pkt_cnt; ++idx)
 	{
-		food_t food{be16toh(pkt[idx].x), be16toh(pkt[idx].y), pkt[idx].color, pkt[idx].size / 5, false};
+		pkt_food_set_t pkt;
+		memcpy(&pkt, buf + (sizeof(pkt) * idx), sizeof(pkt));
+		food_t food{be16toh(pkt.x), be16toh(pkt.y), pkt.color, pkt.size / 5, false};
 		food_list.push_back(food);
 	}
 }
@@ -229,9 +237,10 @@ void game_t::pkt_food_set(const uint8_t* buf, size_t size)
 void game_t::pkt_food_add(const uint8_t* buf, size_t size)
 {
 	if (size < sizeof(pkt_food_set_t)){ LOG("wrong size:%zu", size); return; }
-	const pkt_food_set_t* pkt = reinterpret_cast<const pkt_food_set_t*>(buf);
-	LOG("%u %u %u %u", pkt->color, be16toh(pkt->x), be16toh(pkt->y), pkt->size / 5);
-	food_t food{be16toh(pkt->x), be16toh(pkt->y), pkt->color, pkt->size / 5, false};
+	pkt_food_set_t pkt;
+	memcpy(&pkt, buf, sizeof(pkt));
+	LOG("%u %u %u %u", pkt.color, be16toh(pkt.x), be16toh(pkt.y), pkt.size / 5);
+	food_t food{be16toh(pkt.x), be16toh(pkt.y), pkt.color, pkt.size / 5, false};
 	decltype(food_list)::iterator food_it = find_by_xy(food_list, food);
 	if (food_it != food_list.end())
 		return;
@@ -242,9 +251,10 @@ void game_t::pkt_food_add(const uint8_t* buf, size_t size)
 void game_t::pkt_food_eat(const uint8_t* buf, size_t size)
 {
 	if (size < sizeof(pkt_food_eat_t)){ LOG("wrong size:%zu", size); return; }
-	const pkt_food_eat_t* pkt = reinterpret_cast<const pkt_food_eat_t*>(buf);
-	xy_t xy{be16toh(pkt->x), be16toh(pkt->y)};
-	LOG("%s snake_id:%u", to_str(xy).c_str(), be16toh(pkt->snake_id));
+	pkt_food_eat_t pkt;
+	memcpy(&pkt, buf, sizeof(pkt));
+	xy_t xy{be16toh(pkt.x), be16toh(pkt.y)};
+	LOG("%s snake_id:%u", to_str(xy).c_str(), be16toh(pkt.snake_id));
 	for (food_t& food : food_list)
 		if (food == xy)
 			food.eaten = true;
@@ -254,20 +264,22 @@ void game_t::pkt_food_eat(const uint8_t* buf, size_t size)
 void game_t::pkt_snake_mov(const uint8_t* buf, size_t size)
 {
 	if (size < sizeof(pkt_snake_mov_t)){ LOG("wrong size:%zu", size); return; }
-	const pkt_snake_mov_t* pkt = reinterpret_cast<const pkt_snake_mov_t*>(buf);
-	size_t snake_id = be16toh(pkt->snake_id);
+	pkt_snake_mov_t pkt;
+	memcpy(&pkt, buf, sizeof(pkt));
+	size_t snake_id = be16toh(pkt.snake_id);
 	snake_t& snake = snake_get(snake_id);
 	if (my_snake_id == snake_id_invalid)
 		my_snake_id = snake_id;
-	snake.move(xy_t{be16toh(pkt->x), be16toh(pkt->y)});
+	snake.move(xy_t{be16toh(pkt.x), be16toh(pkt.y)});
 	LOG("%zu %s", snake_id, to_str(snake.part_list[0]).c_str());
 }
 
 void game_t::pkt_snake_mov_G(const uint8_t* buf, size_t size)
 {
 	if (size < sizeof(pkt_snake_mov_G_t)){ LOG("wrong size:%zu", size); return; }
-	const pkt_snake_mov_G_t* pkt = reinterpret_cast<const pkt_snake_mov_G_t*>(buf);
-	size_t snake_id = be16toh(pkt->snake_id);
+	pkt_snake_mov_G_t pkt;
+	memcpy(&pkt, buf, sizeof(pkt));
+	size_t snake_id = be16toh(pkt.snake_id);
 	snake_t& snake = snake_get(snake_id);
 	if (snake.snake_length == 0)
 		return;
@@ -275,8 +287,8 @@ void game_t::pkt_snake_mov_G(const uint8_t* buf, size_t size)
 		return;
 
 	xy_t head{snake.part_list.front()};
-	head.x += pkt->x - 128;
-	head.y += pkt->y - 128;
+	head.x += pkt.x - 128;
+	head.y += pkt.y - 128;
 	LOG("%zu %s", snake_id, to_str(head).c_str());
 	snake.move(head);
 }
@@ -285,14 +297,15 @@ void game_t::pkt_snake_mov_G(const uint8_t* buf, size_t size)
 void game_t::pkt_snake_mov_inc(const uint8_t* buf, size_t size)
 {
 	if (size != sizeof(pkt_snake_mov_inc_t)){ LOG("wrong size:%zu", size); return; }
-	const pkt_snake_mov_inc_t* pkt = reinterpret_cast<const pkt_snake_mov_inc_t*>(buf);
-	size_t snake_id = be16toh(pkt->snake_id);
+	pkt_snake_mov_inc_t pkt;
+	memcpy(&pkt, buf, sizeof(pkt));
+	size_t snake_id = be16toh(pkt.snake_id);
 	snake_t& snake = snake_get(snake_id);
 	snake.snake_length++;
 
 	xy_t head{snake.part_list.front()};
-	head.x += pkt->x - 128;
-	head.y += pkt->y - 128;
+	head.x += pkt.x - 128;
+	head.y += pkt.y - 128;
 	LOG("%zu %s length:%zu", snake_id, to_str(head).c_str(), snake.snake_length);
 	snake.move(head);
 }
@@ -308,28 +321,31 @@ void game_t::pkt_snake_rot_e(const uint8_t* buf, size_t size)
 	{
 		case sizeof(pkt_snake_rot_e_3_t):
 		{
-			const pkt_snake_rot_e_3_t* pkt = reinterpret_cast<const pkt_snake_rot_e_3_t*>(buf);
-			snake_id = be16toh(pkt->snake_id);
+			pkt_snake_rot_e_3_t pkt;
+			memcpy(&pkt, buf, sizeof(pkt));
+			snake_id = be16toh(pkt.snake_id);
 			// ang * pi2 / 256 (current snake angle in radians, clockwise from (1, 0))
-			angle = pkt->angle * M_PI * 2 / 256;
+			angle = pkt.angle * M_PI * 2 / 256;
 			snake_get(snake_id).rot_angle = angle;
 			break;
 		}
 		case sizeof(pkt_snake_rot_e_4_t):
 		{
-			const pkt_snake_rot_e_4_t* pkt = reinterpret_cast<const pkt_snake_rot_e_4_t*>(buf);
-			snake_id = be16toh(pkt->snake_id);
-			angle = 1. * pkt->angle * M_PI * 2 / 256;
-			speed = 1. * pkt->speed / 18;
+			pkt_snake_rot_e_4_t pkt;
+			memcpy(&pkt, buf, sizeof(pkt));
+			snake_id = be16toh(pkt.snake_id);
+			angle = 1. * pkt.angle * M_PI * 2 / 256;
+			speed = 1. * pkt.speed / 18;
 			break;
 		}
 		case sizeof(pkt_snake_rot_e_5_t):
 		{
-			const pkt_snake_rot_e_5_t* pkt = reinterpret_cast<const pkt_snake_rot_e_5_t*>(buf);
-			snake_id = be16toh(pkt->snake_id);
-			angle = pkt->angle * M_PI * 2 / 256;
-			wangle = pkt->wangle * M_PI * 2 / 256;
-			speed = 1. * pkt->speed / 18;
+			pkt_snake_rot_e_5_t pkt;
+			memcpy(&pkt, buf, sizeof(pkt));
+			snake_id = be16toh(pkt.snake_id);
+			angle = pkt.angle * M_PI * 2 / 256;
+			wangle = pkt.wangle * M_PI * 2 / 256;
+			speed = 1. * pkt.speed / 18;
 			break;
 		}
 		default:
@@ -350,12 +366,13 @@ void game_t::pkt_snake_rot_e(const uint8_t* buf, size_t size)
 void game_t::pkt_snake_rot_3(const uint8_t* buf, size_t size)
 {
 	if (size != sizeof(pkt_snake_rot_5_t)){ LOG("wrong size:%zu", size); return; }
-	const pkt_snake_rot_5_t* pkt = reinterpret_cast<const pkt_snake_rot_5_t*>(buf);
-	size_t snake_id = be16toh(pkt->snake_id);
+	pkt_snake_rot_5_t pkt;
+	memcpy(&pkt, buf, sizeof(pkt));
+	size_t snake_id = be16toh(pkt.snake_id);
 	snake_t& snake = snake_get(snake_id);
 	// ang * pi2 / 256 (current snake angle in radians, clockwise from (1, 0))
-	float angle = pkt->angle * M_PI * 2 / 256;
-	float wangle = pkt->wangle * M_PI * 2 / 256;
+	float angle = pkt.angle * M_PI * 2 / 256;
+	float wangle = pkt.wangle * M_PI * 2 / 256;
 	LOG("size:%zu %zu angle:%f wangle:%f", size, snake_id, angle, wangle);
 	snake.rot_angle = angle;
 	snake.rot_wangle = wangle;
@@ -365,13 +382,14 @@ void game_t::pkt_snake_rot_3(const uint8_t* buf, size_t size)
 void game_t::pkt_snake_rot_4(const uint8_t* buf, size_t size)
 {
 	if (size != sizeof(pkt_snake_rot_4_5_t)){ LOG("wrong size:%zu", size); return; }
-	const pkt_snake_rot_4_5_t* pkt = reinterpret_cast<const pkt_snake_rot_4_5_t*>(buf);
-	size_t snake_id = be16toh(pkt->snake_id);
+	pkt_snake_rot_4_5_t pkt;
+	memcpy(&pkt, buf, sizeof(pkt));
+	size_t snake_id = be16toh(pkt.snake_id);
 	snake_t& snake = snake_get(snake_id);
 	// ang * pi2 / 256 (current snake angle in radians, clockwise from (1, 0))
-	float angle = pkt->angle * M_PI * 2 / 256;
-	float wangle = pkt->wangle * M_PI * 2 / 256;
-	float speed = pkt->speed / 18;
+	float angle = pkt.angle * M_PI * 2 / 256;
+	float wangle = pkt.wangle * M_PI * 2 / 256;
+	float speed = pkt.speed / 18;
 	LOG("size:%zu %zu angle:%f wangle:%f speed:%f", size, snake_id, angle, wangle, speed);
 	snake.rot_angle = angle;
 	snake.rot_wangle = wangle;
@@ -381,11 +399,12 @@ void game_t::pkt_snake_rot_4(const uint8_t* buf, size_t size)
 void game_t::pkt_snake_rot_5(const uint8_t* buf, size_t size)
 {
 	if (size != sizeof(pkt_snake_rot_5_t)){ LOG("wrong size:%zu", size); return; }
-	const pkt_snake_rot_5_t* pkt = reinterpret_cast<const pkt_snake_rot_5_t*>(buf);
-	size_t snake_id = be16toh(pkt->snake_id);
+	pkt_snake_rot_5_t pkt;
+	memcpy(&pkt, buf, sizeof(pkt));
+	size_t snake_id = be16toh(pkt.snake_id);
 	// ang * pi2 / 256 (current snake angle in radians, clockwise from (1, 0))
-	float angle = pkt->angle * M_PI * 2 / 256;
-	LOG("size:%zu %zu angle:%f pkt->angle:%u", size, snake_id, angle, pkt->angle);
+	float angle = pkt.angle * M_PI * 2 / 256;
+	LOG("size:%zu %zu angle:%f pkt.angle:%u", size, snake_id, angle, pkt.angle);
 	snake_get(snake_id).rot_angle = angle;
 }
 
@@ -393,13 +412,14 @@ void game_t::pkt_snake_rot_5(const uint8_t* buf, size_t size)
 void game_t::pkt_snake_inc(const uint8_t* buf, size_t size)
 {
 	if (size < sizeof(pkt_snake_inc_t)){ LOG("wrong size:%zu", size); return; }
-	const pkt_snake_inc_t* pkt = reinterpret_cast<const pkt_snake_inc_t*>(buf);
-	size_t snake_id = be16toh(pkt->snake_id);
+	pkt_snake_inc_t pkt;
+	memcpy(&pkt, buf, sizeof(pkt));
+	size_t snake_id = be16toh(pkt.snake_id);
 	snake_t& snake = snake_get(snake_id);
 	snake.snake_length++;
-	snake.fam = 1. * be24toh(pkt->fam) / 16777215;
+	snake.fam = 1. * be24toh(pkt.fam) / 16777215;
 
-	snake.move(xy_t{be16toh(pkt->x), be16toh(pkt->y)});
+	snake.move(xy_t{be16toh(pkt.x), be16toh(pkt.y)});
 
 	LOG("%zu %s fam:%f",
 		snake_id,
@@ -412,10 +432,11 @@ void game_t::pkt_snake(const uint8_t* buf, size_t size)
 {
 	if (size == sizeof(pkt_snake_t))
 	{
-		const pkt_snake_t* pkt = reinterpret_cast<const pkt_snake_t*>(buf);
-		size_t snake_id = be16toh(pkt->snake_id);
-		LOG("%zu reason:%u size:%zu", snake_id, pkt->reason, size);
-		if (pkt->reason == 1)
+		pkt_snake_t pkt;
+		memcpy(&pkt, buf, sizeof(pkt));
+		size_t snake_id = be16toh(pkt.snake_id);
+		LOG("%zu reason:%u size:%zu", snake_id, pkt.reason, size);
+		if (pkt.reason == 1)
 		{
 			snake_get(snake_id).dead = true;
 			if (snake_id == my_snake_id)
@@ -432,13 +453,14 @@ void game_t::pkt_snake(const uint8_t* buf, size_t size)
 	}
 
 	if (size < sizeof(pkt_snake_data_t)){ LOG("wrong size:%zu", size); return; }
-	const pkt_snake_data_t* pkt = reinterpret_cast<const pkt_snake_data_t*>(buf);
-	size_t snake_id = be16toh(pkt->snake_id);
+	pkt_snake_data_t pkt;
+	memcpy(&pkt, buf, sizeof(pkt));
+	size_t snake_id = be16toh(pkt.snake_id);
 	snake_t& snake = snake_get(snake_id);
 	snake.clear();
-	xy_t head{be24toh(pkt->x) / 5, be24toh(pkt->y) / 5};
+	xy_t head{be24toh(pkt.x) / 5, be24toh(pkt.y) / 5};
 	const uint8_t* skin_len_p = reinterpret_cast<const uint8_t*>
-		(buf + sizeof(pkt_snake_data_t) + pkt->name_len);
+		(buf + sizeof(pkt_snake_data_t) + pkt.name_len);
 	const pkt_snake_data_tail_t* tail_p = reinterpret_cast<const pkt_snake_data_tail_t*>
 		(skin_len_p + 1 + (*skin_len_p));
 	const pkt_snake_data_part_t* part_p = reinterpret_cast<const pkt_snake_data_part_t*>
@@ -446,23 +468,25 @@ void game_t::pkt_snake(const uint8_t* buf, size_t size)
 	const size_t part_cnt =
 		(size - (reinterpret_cast<const uint8_t*>(part_p) - buf)) / sizeof(pkt_snake_data_part_t);
 	char name[80];
-	size_t name_len = std::min(sizeof(name) - 1, static_cast<size_t>(pkt->name_len));
-	memcpy(name, buf + sizeof(*pkt), name_len);
+	size_t name_len = std::min(sizeof(name) - 1, static_cast<size_t>(pkt.name_len));
+	memcpy(name, buf + sizeof(pkt), name_len);
 	name[name_len] = 0;
-	xy_t tail{be24toh(tail_p->x) / 5, be24toh(tail_p->y) / 5};
+	pkt_snake_data_tail_t pkt_tail;
+	memcpy(&pkt_tail, reinterpret_cast<const uint8_t*>(tail_p), sizeof(pkt_tail));
+	xy_t tail{be24toh(pkt_tail.x) / 5, be24toh(pkt_tail.y) / 5};
 	LOG("%zu size:%zu head:%d:%d tail:%d:%d part_cnt:%zu skin:%d name:%s",
-		snake_id, size, head.x, head.y, tail.x, tail.y, part_cnt, pkt->skin, name);
+		snake_id, size, head.x, head.y, tail.x, tail.y, part_cnt, pkt.skin, name);
 
-	snake.fam = 1. * be24toh(pkt->fam) / 16777215;
-	snake.rot_angle = 1. * be24toh(pkt->angle) * M_PI * 2 / 16777215;
-	snake.rot_wangle = 1. * be24toh(pkt->wangle) * M_PI * 2 / 16777215;
-	snake.speed = 1. * be16toh(pkt->speed) / 1000;
+	snake.fam = 1. * be24toh(pkt.fam) / 16777215;
+	snake.rot_angle = 1. * be24toh(pkt.angle) * M_PI * 2 / 16777215;
+	snake.rot_wangle = 1. * be24toh(pkt.wangle) * M_PI * 2 / 16777215;
+	snake.speed = 1. * be16toh(pkt.speed) / 1000;
 	strncpy(snake.name, name, sizeof(snake.name) - 1);
 
 	if (snake_id_list.end() == std::find(snake_id_list.begin(), snake_id_list.end(), snake_id))
 		snake_id_list.push_back(snake_id);
 
-	snake.skin = pkt->skin;
+	snake.skin = pkt.skin;
 	snake.tstamp_data = uptime_us();
 	if (snake.head == xy_t{0, 0} && !snake.part_list.empty())
 		snake.head = snake.part_list[0];
@@ -471,9 +495,11 @@ void game_t::pkt_snake(const uint8_t* buf, size_t size)
 	new_part_list.push_front(tail);
 	for (size_t idx = 0; idx < part_cnt; ++idx)
 	{
+		pkt_snake_data_part_t pkt_part;
+		memcpy(&pkt_part, reinterpret_cast<const uint8_t*>(&part_p[idx]), sizeof(pkt_part));
 		xy_t part{
-			(part_p[idx].x - 127) / 2,
-			(part_p[idx].y - 127) / 2
+			(pkt_part.x - 127) / 2,
+			(pkt_part.y - 127) / 2
 			};
 		part = {
 			new_part_list.front().x + part.x,
@@ -506,16 +532,18 @@ static std::deque<prey_t>::iterator prey_list_find_id(std::deque<prey_t>& prey_l
 // y
 void game_t::pkt_prey(const uint8_t* buf, size_t size)
 {
-	const pkt_prey_rem_t* pkt = reinterpret_cast<const pkt_prey_rem_t*>(buf);
+	pkt_prey_rem_t pkt;
+	memcpy(&pkt, buf, sizeof(pkt));
 	prey_t prey{};
-	prey.id = be16toh(pkt->prey_id);
+	prey.id = be16toh(pkt.prey_id);
 	std::deque<prey_t>::iterator prey_it = prey_list_find_id(prey_list, prey.id);
 	switch(size)
 	{
 		case sizeof(pkt_prey_eat_t):
 		{
-			const pkt_prey_eat_t* pkt = reinterpret_cast<const pkt_prey_eat_t*>(buf);
-			prey.id = be16toh(pkt->prey_id);
+			pkt_prey_eat_t pkt;
+			memcpy(&pkt, buf, sizeof(pkt));
+			prey.id = be16toh(pkt.prey_id);
 			if (prey_it == prey_list.end())
 			{
 				LOG("prey.id:%zu not found", prey.id);
@@ -526,8 +554,9 @@ void game_t::pkt_prey(const uint8_t* buf, size_t size)
 		}
 		case sizeof(pkt_prey_rem_t):
 		{
-			const pkt_prey_rem_t* pkt = reinterpret_cast<const pkt_prey_rem_t*>(buf);
-			prey.id = be16toh(pkt->prey_id);
+			pkt_prey_rem_t pkt;
+			memcpy(&pkt, buf, sizeof(pkt));
+			prey.id = be16toh(pkt.prey_id);
 			if (prey_it == prey_list.end())
 			{
 				LOG("prey.id:%zu not found", prey.id);
@@ -538,19 +567,20 @@ void game_t::pkt_prey(const uint8_t* buf, size_t size)
 		}
 		case sizeof(pkt_prey_add_t):
 		{
-			const pkt_prey_add_t* pkt = reinterpret_cast<const pkt_prey_add_t*>(buf);
+			pkt_prey_add_t pkt;
+			memcpy(&pkt, buf, sizeof(pkt));
 			if (prey_it != prey_list.end())
 			{
 				LOG("prey.id:%zu found", prey.id);
 				return;
 			}
-			prey.xy = xy_t{be24toh(pkt->x) / 5, be24toh(pkt->y) / 5};
-			prey.color = pkt->color;
-			prey.size = pkt->size / 5;
-			prey.rot_angle = 1. * be24toh(pkt->angle) * M_PI * 2 / 16777215;  // value * 2 * PI / 16777215
-			prey.rot_wangle = 1. * be24toh(pkt->wangle) * M_PI * 2 / 16777215;
-			prey.speed = be16toh(pkt->wangle) / 1000;
-			prey.dir = static_cast<rot_dir_t>(pkt->dir - 48);
+			prey.xy = xy_t{be24toh(pkt.x) / 5, be24toh(pkt.y) / 5};
+			prey.color = pkt.color;
+			prey.size = pkt.size / 5;
+			prey.rot_angle = 1. * be24toh(pkt.angle) * M_PI * 2 / 16777215;  // value * 2 * PI / 16777215
+			prey.rot_wangle = 1. * be24toh(pkt.wangle) * M_PI * 2 / 16777215;
+			prey.speed = be16toh(pkt.wangle) / 1000;
+			prey.dir = static_cast<rot_dir_t>(pkt.dir - 48);
 			prey.tstamp_data = uptime_us();
 			prey_list.emplace_back(prey);
 			LOG(" prey.id:%zu %s size:%d color:%d rot_angle:%f rot_wangle:%f speed:%f dir:%d",
@@ -569,8 +599,9 @@ void game_t::pkt_prey(const uint8_t* buf, size_t size)
 void game_t::pkt_prey_upd(const uint8_t* buf, size_t size)
 {
 	if (size < sizeof(pkt_prey_upd_t)){ LOG("wrong size:%zu", size); return; }
-	const pkt_prey_upd_t* pkt = reinterpret_cast<const pkt_prey_upd_t*>(buf);
-	size_t prey_id = be16toh(pkt->prey_id);
+	pkt_prey_upd_t pkt;
+	memcpy(&pkt, buf, sizeof(pkt));
+	size_t prey_id = be16toh(pkt.prey_id);
 	std::deque<prey_t>::iterator prey_it = prey_list_find_id(prey_list, prey_id);
 	if (prey_it == prey_list.end())
 	{
@@ -579,7 +610,7 @@ void game_t::pkt_prey_upd(const uint8_t* buf, size_t size)
 	}
 	prey_t& prey = *prey_it;
 	prey.xy_prev = prey.xy;
-	prey.xy = xy_t{be16toh(pkt->x) * 3 + 1, be16toh(pkt->y) * 3 + 1};
+	prey.xy = xy_t{be16toh(pkt.x) * 3 + 1, be16toh(pkt.y) * 3 + 1};
 	uint64_t now_us = uptime_us();
 	prey.tstamp_data = now_us;
 	ssize_t size_ext = size - sizeof(pkt_prey_upd_t);
@@ -595,51 +626,58 @@ void game_t::pkt_prey_upd(const uint8_t* buf, size_t size)
 	{
 		case sizeof(pkt_prey_upd_ext_2_t):
 		{
-			const pkt_prey_upd_ext_2_t* pkt = reinterpret_cast<const pkt_prey_upd_ext_2_t*>(buf);
-			speed = be16toh(pkt->speed);
+			pkt_prey_upd_ext_2_t pkt;
+			memcpy(&pkt, buf, sizeof(pkt));
+			speed = be16toh(pkt.speed);
 			break;
 		}
 		case sizeof(pkt_prey_upd_ext_3_t):
 		{
-			const pkt_prey_upd_ext_3_t* pkt = reinterpret_cast<const pkt_prey_upd_ext_3_t*>(buf);
-			angle = be24toh(pkt->angle);
+			pkt_prey_upd_ext_3_t pkt;
+			memcpy(&pkt, buf, sizeof(pkt));
+			angle = be24toh(pkt.angle);
 			break;
 		}
 		case sizeof(pkt_prey_upd_ext_4_t):
 		{
-			const pkt_prey_upd_ext_4_t* pkt = reinterpret_cast<const pkt_prey_upd_ext_4_t*>(buf);
-			wangle = be24toh(pkt->wangle);
+			pkt_prey_upd_ext_4_t pkt;
+			memcpy(&pkt, buf, sizeof(pkt));
+			wangle = be24toh(pkt.wangle);
 			break;
 		}
 		case sizeof(pkt_prey_upd_ext_5_t):
 		{
-			const pkt_prey_upd_ext_5_t* pkt = reinterpret_cast<const pkt_prey_upd_ext_5_t*>(buf);
-			wangle = be24toh(pkt->wangle);
-			speed = be16toh(pkt->speed);
+			pkt_prey_upd_ext_5_t pkt;
+			memcpy(&pkt, buf, sizeof(pkt));
+			wangle = be24toh(pkt.wangle);
+			speed = be16toh(pkt.speed);
 			break;
 		}
 		case sizeof(pkt_prey_upd_ext_6_t):
 		{
-			const pkt_prey_upd_ext_6_t* pkt = reinterpret_cast<const pkt_prey_upd_ext_6_t*>(buf);
-			wangle = be24toh(pkt->wangle);
-			speed = be16toh(pkt->speed);
+			pkt_prey_upd_ext_6_t pkt;
+			memcpy(&pkt, buf, sizeof(pkt));
+			wangle = be24toh(pkt.wangle);
+			speed = be16toh(pkt.speed);
 			break;
 		}
 		case sizeof(pkt_prey_upd_ext_7_t):
 		{
-			const pkt_prey_upd_ext_7_t* pkt = reinterpret_cast<const pkt_prey_upd_ext_7_t*>(buf);
-			dir = pkt->dir;
-			angle = be24toh(pkt->angle);
-			wangle = be24toh(pkt->wangle);
+			pkt_prey_upd_ext_7_t pkt;
+			memcpy(&pkt, buf, sizeof(pkt));
+			dir = pkt.dir;
+			angle = be24toh(pkt.angle);
+			wangle = be24toh(pkt.wangle);
 			break;
 		}
 		case sizeof(pkt_prey_upd_ext_9_t):
 		{
-			const pkt_prey_upd_ext_9_t* pkt = reinterpret_cast<const pkt_prey_upd_ext_9_t*>(buf);
-			dir = pkt->dir;
-			angle = be24toh(pkt->angle);
-			wangle = be24toh(pkt->wangle);
-			speed = be16toh(pkt->speed);
+			pkt_prey_upd_ext_9_t pkt;
+			memcpy(&pkt, buf, sizeof(pkt));
+			dir = pkt.dir;
+			angle = be24toh(pkt.angle);
+			wangle = be24toh(pkt.wangle);
+			speed = be16toh(pkt.speed);
 			break;
 		}
 		default:
@@ -677,10 +715,11 @@ void game_t::pkt_snake_fam(const uint8_t* buf, size_t size)
 	// 	fam is a float value (usually in [0 .. 1.0]) representing a
 	// 	body part ratio before changing snake length sct in body parts.
 	// 	Snake gets new body part when fam reaches 1, and looses 1, when fam reaches 0.
-	const pkt_snake_fam_t* pkt = reinterpret_cast<const pkt_snake_fam_t*>(buf);
-	size_t snake_id = be16toh(pkt->snake_id);
+	pkt_snake_fam_t pkt;
+	memcpy(&pkt, buf, sizeof(pkt));
+	size_t snake_id = be16toh(pkt.snake_id);
 	snake_t& snake = snake_get(snake_id);
-	snake.fam = 1. * be24toh(pkt->fam) / 16777215;
+	snake.fam = 1. * be24toh(pkt.fam) / 16777215;
 	LOG("%zu fam:%f length:%zu", snake_id, snake.fam, snake.snake_length);
 }
 
@@ -688,10 +727,11 @@ void game_t::pkt_snake_fam(const uint8_t* buf, size_t size)
 void game_t::pkt_snake_rem_part(const uint8_t* buf, size_t size)
 {
 	if (size < sizeof(pkt_snake_fam_t)){ LOG("wrong size:%zu", size); return; }
-	const pkt_snake_fam_t* pkt = reinterpret_cast<const pkt_snake_fam_t*>(buf);
-	size_t snake_id = be16toh(pkt->snake_id);
+	pkt_snake_fam_t pkt;
+	memcpy(&pkt, buf, sizeof(pkt));
+	size_t snake_id = be16toh(pkt.snake_id);
 	snake_t& snake = snake_get(snake_id);
-	snake.fam = 1. * be24toh(pkt->fam) / 16777215;
+	snake.fam = 1. * be24toh(pkt.fam) / 16777215;  // TODO
 	LOG("%zu fam:%f length:%zu", snake_id, snake.fam, snake.snake_length);
 	if (snake.snake_length == 0)
 		return;
@@ -733,26 +773,28 @@ void game_t::pkt_minimap(const uint8_t* buf, size_t size)
 void game_t::pkt_leaderboard(const uint8_t* buf, size_t size)
 {
 	if (size < sizeof(pkt_leaderboard_t)){ LOG("wrong size:%zu", size); return; }
-	const pkt_leaderboard_t* pkt = reinterpret_cast<const pkt_leaderboard_t*>(buf);
-	leaderboard.rank = be16toh(pkt->rank);
-	leaderboard.player_count = be16toh(pkt->player_count);
+	pkt_leaderboard_t pkt;
+	memcpy(&pkt, buf, sizeof(pkt));
+	leaderboard.rank = be16toh(pkt.rank);
+	leaderboard.player_count = be16toh(pkt.player_count);
 	LOG(" rank:%zu player_count:%zu", leaderboard.rank, leaderboard.player_count);
 	const char* cursor = reinterpret_cast<const char*>(buf) + sizeof(pkt_leaderboard_t);
 	const char* end = reinterpret_cast<const char*>(buf) + size;
 	size_t idx = 0;
 	while (cursor < end && idx < leaderboard.player_list.size())
 	{
-		const pkt_leaderboard_player_t* pkt_player = reinterpret_cast<const pkt_leaderboard_player_t*>(cursor);
+		pkt_leaderboard_player_t pkt_player;
+		memcpy(&pkt_player, cursor, sizeof(pkt_player));
 		cursor += sizeof(pkt_leaderboard_player_t);
 		leaderboard_player_t& player = leaderboard.player_list[idx];
 		player.name = {};
-		size_t name_len = std::min(static_cast<size_t>(pkt_player->name_len), player.name.size() - 1);
+		size_t name_len = std::min(static_cast<size_t>(pkt_player.name_len), player.name.size() - 1);
 		strncpy(player.name.data(), cursor, name_len);
-		player.body_part_count = be16toh(pkt_player->body_part_count);
-		player.font_color = pkt_player->font_color;
-		player.fam = 1. * be24toh(pkt_player->fam) / 16777215;
+		player.body_part_count = be16toh(pkt_player.body_part_count);
+		player.font_color = pkt_player.font_color;
+		player.fam = 1. * be24toh(pkt_player.fam) / 16777215;
 
-		cursor += pkt_player->name_len;
+		cursor += pkt_player.name_len;
 		++idx;
 	}
 	leaderboard.have_data = true;
