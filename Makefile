@@ -1,6 +1,6 @@
 ZLIB_LDFLAGS:=$(shell pkg-config --libs zlib)
 
-CXX_FLAGS += -Wall -Wextra -g -DRUN_TIME -Wno-narrowing
+CXX_FLAGS += -Wall -Wextra -g -DRUN_TIME -Wno-narrowing -Wstrict-aliasing=3
 CXX_FLAGS += -DNDEBUG
 # CXX_FLAGS += -DDEBUG_LOG
 
