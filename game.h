@@ -265,7 +265,6 @@ struct game_t
 	void pkt_sector_rem(const uint8_t* buf, size_t size);  //  = 'w',	   // Remove Sector
 	void pkt_snake(const uint8_t* buf, size_t size);  //  = 's',			// Add/remove Snake
 	void pkt_food_set(const uint8_t* buf, size_t size);  //  = 'F',		 // Add Food, Sent when food that existed before enters range.
-//	void pkt_spawn_food(const uint8_t* buf, size_t size);  //  = 'b',	   // Add Food, Sent when food is created because of turbo or the death of a snake.
 	void pkt_food_add(const uint8_t* buf, size_t size);  //  = 'f',  // Add Food, Sent when natural food spawns while in range.
 	void pkt_food_eat(const uint8_t* buf, size_t size);  //  = 'c',  // Food eaten
 	void pkt_prey(const uint8_t* buf, size_t size);  // y
