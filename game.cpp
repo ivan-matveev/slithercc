@@ -44,6 +44,14 @@ game_t::game_t(screen_sdl_t& screen_)
 game_t::~game_t()
 {
 	LOG("");
+	for (snake_t* snake_p : snake_list)
+	{
+		if (snake_p != nullptr)
+		{
+			delete snake_p;
+			snake_p = nullptr;
+		}
+	}
 }
 
 void game_t::pkt_handle_init()
