@@ -83,27 +83,7 @@ void read_thread_func(websocket::stream<tcp::socket>& ws)
 	}
 }
 
-void write_thread_func(websocket::stream<tcp::socket>& ws, game_t& game)
 {
-	while(run)
-	{
-		if (!timerfd_grid_us_wait<200000>())
-		{
-			LOG("fail: timerfd_grid_us_wait<>()");
-		}
-		if (!game.ready())
-			continue;
-		{
-			std::lock_guard<std::mutex> lock_guard(rw_lock);
-			if (!ws.is_open())
-				break;
-			game.pkt_send(
-				[&ws](const char pkt) mutable { ws_write(ws, &pkt, sizeof(pkt)); }
-			);
-		}
-	}
-}
-
 void play_rec()
 {
 	FILE* fh = fopen("slithercc.rec", "r");
@@ -278,8 +258,6 @@ int main(int argc, const char* argv[])
 	}
 
 	signal_handler_register();
-
-// 	std::thread write_tread(write_thread_func, std::ref(ws), std::ref(game));
 
 	while (run)
 	{
