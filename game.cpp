@@ -803,6 +803,8 @@ void game_t::pkt_pong(const uint8_t* buf, size_t size)
 {
 	(void)buf;
 	(void)size;
+	if (ping_ctx.wait_pong == false)
+		return;
 	ping_ctx.wait_pong = false;
 	ping_ctx.ping_pong_us = uptime_us() - ping_ctx.ping_tstamp;
 	ping_ctx.ping_pong_avg_us += ping_ctx.ping_pong_us;

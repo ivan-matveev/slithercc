@@ -83,11 +83,8 @@ void read_thread_func(websocket::stream<tcp::socket>& ws)
 	}
 }
 
+void play_rec(FILE* fh)
 {
-void play_rec()
-{
-	FILE* fh = fopen("slithercc.rec", "r");
-	assert(fh != nullptr);
 	uint64_t rec_us = 0;
 	uint64_t rec_us_prev = 0;
 	ssize_t size = 0;
@@ -97,7 +94,8 @@ void play_rec()
 		size = fread(buf, 1, sizeof(game_evt_rec_hdr_t), fh);
 		if (size < static_cast<ssize_t>(sizeof(game_evt_rec_hdr_t)))
 			break;
-		const game_evt_rec_hdr_t rec_hdr = *(reinterpret_cast<game_evt_rec_hdr_t*>(buf));
+		game_evt_rec_hdr_t rec_hdr;
+		memcpy(&rec_hdr, buf, sizeof(rec_hdr));
 		size = fread(buf, 1, rec_hdr.size, fh);
 		if (size < static_cast<ssize_t>(sizeof(pkt_hdr_t)))
 			break;
@@ -228,7 +226,13 @@ int main(int argc, const char* argv[])
 	std::thread read_tread;
 	if (play_file)
 	{
-		read_tread = std::thread(play_rec);
+		FILE* fh = fopen(config.play_file.c_str(), "r");
+		if (fh == nullptr)
+		{
+			ERR("can not open file:%s", config.play_file.c_str());
+			return EXIT_FAILURE;
+		}
+		read_tread = std::thread(play_rec, fh);
 	}
 	else if (test_server)
 	{
