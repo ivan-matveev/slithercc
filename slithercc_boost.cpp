@@ -17,8 +17,6 @@
 #include <string>
 #include <chrono>
 #include <thread>
-#include <assert.h>
-
 
 sig_atomic_t run = 1;
 
@@ -237,7 +235,11 @@ int main(int argc, const char* argv[])
 	else if (test_server)
 	{
 		ws = connect_ws(config.test_server.c_str(), skin_config, test_server);
-		assert(ws.is_open());
+		if (!ws.is_open())
+		{
+			ERR("connect_ws() failed");
+			return EXIT_FAILURE;
+		}
 		setup_stream(ws);
 		read_tread = std::thread(read_thread_func, std::ref(ws));
 	}
@@ -245,7 +247,11 @@ int main(int argc, const char* argv[])
 	{
 		std::string i33628_txt_str;
 		i33628_txt_str = connect_html();
-		assert(i33628_txt_str.size() > 0);
+		if (i33628_txt_str.size() == 0)
+		{
+			ERR("connect_html() failed");
+			return EXIT_FAILURE;
+		}
 		str_list_t server_list = decode_server_list(i33628_txt_str);
 		std::string server_list_str;
 		for (auto server : server_list)
@@ -254,7 +260,11 @@ int main(int argc, const char* argv[])
 		if (config.server.length() == 0)
 			config.server = server_list[0];
 		ws = connect_ws(config.server.c_str(), skin_config);
-		assert(ws.is_open());
+		if (!ws.is_open())
+		{
+			ERR("connect_ws() failed");
+			return EXIT_FAILURE;
+		}
 		setup_stream(ws);
 		if (!play_file && config.record_file.length() > 0)
 			game_evt_rec_fh = fopen(config.record_file.c_str(), "w");
