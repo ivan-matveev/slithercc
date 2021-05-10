@@ -85,10 +85,9 @@ void game_t::pkt_handle(const uint8_t* buf, size_t size)
 {
 // 	DPROFILE;
 	assert(size >= sizeof(pkt_hdr_t));
-	pkt_hdr_t pkt_hdr_s;
-	memcpy(&pkt_hdr_s, buf, sizeof(pkt_hdr_s));
-	const pkt_hdr_t* pkt_hdr = &pkt_hdr_s;
-	const uint8_t pkt_type = static_cast<uint8_t>(pkt_hdr->packet_type);
+	pkt_hdr_t pkt_hdr;
+	memcpy(&pkt_hdr, buf, sizeof(pkt_hdr));
+	const uint8_t pkt_type = static_cast<uint8_t>(pkt_hdr.packet_type);
 	buf += sizeof(pkt_hdr_t);
 	size -= sizeof(pkt_hdr_t);
 	if (pkt_handler_list[pkt_type] == nullptr)
