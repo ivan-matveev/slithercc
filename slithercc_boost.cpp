@@ -17,6 +17,7 @@
 #include <string>
 #include <chrono>
 #include <thread>
+#include <memory>
 
 sig_atomic_t run = 1;
 
@@ -213,10 +214,8 @@ int main(int argc, const char* argv[])
 	font_path = dirname(font_path) + "/Arimo-Regular.ttf";
 	screen_sdl_t screen(config.window_size.x, config.window_size.y, font_path);
 	screen.window_title("slithercc");
-	game_t* game_p = new game_t(screen);
-	if (!game_p)
-		return EXIT_FAILURE;
-	game_t& game = *game_p;
+	const std::unique_ptr<game_t> game_p(new game_t(screen));
+	game_t& game = *game_p.get();
 	bool play_file = config.play_file.length() > 0 ? true : false;
 	bool test_server = config.test_server.length() > 0 ? true : false;
 	skin_config_t skin_config{config.skin_id, config.nickname.c_str()};
@@ -318,7 +317,6 @@ int main(int argc, const char* argv[])
 		screen.wait_any_key();
 	}
 	ws_close(ws);
-	delete game_p;
 	if (game_evt_rec_fh != nullptr)
 		fclose(game_evt_rec_fh);
 	return EXIT_SUCCESS;
