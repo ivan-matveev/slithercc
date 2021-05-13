@@ -9,3 +9,4 @@ slithercc_replay_server
 screen_sdl_test
 decode_secret_test
 slithercc.server_list
+boost_*

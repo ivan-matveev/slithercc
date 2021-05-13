@@ -56,7 +56,6 @@ Close debug console(press F12). Start the game.
 ```
 apt-get -y install \
 	build-essential \
-	libboost-dev libboost-system-dev libboost-iostreams-dev \
 	libsdl2-dev libsdl2-image-dev libsdl2-ttf-dev
 ```
 ```
