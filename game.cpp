@@ -11,7 +11,6 @@
 #include "packet_to_client.h"
 #include "packet_to_server.h"
 #include "log.h"
-#include "dumb_profile.h"
 
 game_t::game_t(screen_sdl_t& screen_)
 : config()
@@ -83,7 +82,6 @@ void game_t::pkt_handle_init()
 
 void game_t::pkt_handle(const uint8_t* buf, size_t size)
 {
-// 	DPROFILE;
 	if (size < sizeof(pkt_hdr_t)){ LOG("wrong size:%zu", size); return; }
 	pkt_hdr_t pkt_hdr;
 	memcpy(&pkt_hdr, buf, sizeof(pkt_hdr));

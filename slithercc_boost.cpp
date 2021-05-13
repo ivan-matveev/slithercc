@@ -9,7 +9,6 @@
 #include "ioc.h"
 #include "timerfd_grid.h"
 #include "decode_secret.h"
-#include "dumb_profile.h"
 
 #include <cstdlib>
 #include <csignal>
@@ -274,7 +273,6 @@ int main(int argc, const char* argv[])
 
 	while (run)
 	{
-// 		DPROFILE;
 		ssize_t pkt_cnt;
 		{
 			std::lock_guard<std::mutex> lock_guard(pkt_queue_lock);
@@ -307,7 +305,6 @@ int main(int argc, const char* argv[])
 			run = false;
 	}
 	read_tread.join();
-// 	write_tread.join();
 
 	if (!screen.quit)
 	{
