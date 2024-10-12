@@ -207,6 +207,13 @@ void game_t::pkt_sector_rem(const uint8_t* buf, size_t size)
 	pkt_sector_rem_t pkt;
 	memcpy(&pkt, buf, sizeof(pkt));
 	const xy_t sect_to_rm{pkt.x, pkt.y};
+	auto it = std::find(sector_list.begin(), sector_list.end(), sect_to_rm);
+	if (it == sector_list.end())
+	{
+		// TODO: fix pkt_sector_add() and pkt_sector_rem(); looks like the protocol have changed
+		LOG("server tells us to remove sector that was not added: %d:%d", pkt.x, pkt.y);
+		return;
+	}
 	sector_list.erase(std::remove(sector_list.begin(), sector_list.end(), sect_to_rm));
 	LOG(" %u:%u %u:%u", pkt.x, pkt.y, pkt.x * config.sector_size, pkt.y * config.sector_size);
 }
