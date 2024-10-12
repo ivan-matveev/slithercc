@@ -62,6 +62,12 @@ apt-get -y install \
 make
 ```
 
+To enable debug log uncomment
+```
+CXX_FLAGS += -DDEBUG_LOG
+```
+in the Makefile.
+
 === Acknowledgments
 I would like to thank authors of
 
