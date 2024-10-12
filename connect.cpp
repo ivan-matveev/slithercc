@@ -176,7 +176,8 @@ bool connect_ws_ptc(websocket::stream<tcp::socket>& ws, const char* host_port_st
 	http::response<http::string_body> res;
 	try
 	{
-		ws.handshake_ex(res, host, target, ws_handshake_req_modify);
+		ws.set_option(websocket::stream_base::decorator(ws_handshake_req_modify));
+		ws.handshake(res, host, target);
 	}
 	catch(std::exception const& e)
 	{
@@ -217,7 +218,8 @@ bool connect_ws(
 	http::response<http::string_body> res;
 	try
 	{
-		ws.handshake_ex(res, host, target, ws_handshake_req_modify);
+		ws.set_option(websocket::stream_base::decorator(ws_handshake_req_modify));
+		ws.handshake(res, host, target);
 	}
 	catch(std::exception const& e)
 	{
@@ -250,17 +252,15 @@ bool connect_ws(
 	return true;
 }
 
-websocket::stream<tcp::socket>
-connect_ws(const char* host_port_str, const skin_config_t& skin_config, bool test_server)
+bool connect_ws_full(websocket::stream<tcp::socket>& ws, const char* host_port_str, const skin_config_t& skin_config, bool test_server)
 {
 	tcp::resolver& resolver_get();
 	static websocket::stream<tcp::socket> ws_ptc{ioc_get()};
 	if (!test_server)
 		assert(connect_ws_ptc(ws_ptc, host_port_str));
-	websocket::stream<tcp::socket> ws{ioc_get()};
 	bool ok = connect_ws(ws, host_port_str, skin_config, test_server);
 	if (!ok)
 		ERR("failed:%s", host_port_str);
 
-	return ws;
+	return true;
 }

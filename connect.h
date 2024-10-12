@@ -12,9 +12,9 @@ struct skin_config_t
 std::string connect_html(/*tcp::resolver& resolver, tcp::socket& socket*/);
 bool connect_ws(websocket::stream<tcp::socket>& ws, const char* host_port_str,
 	const skin_config_t& skin_config);
-websocket::stream<tcp::socket>
-	connect_ws(const char* host_port_str, const skin_config_t& skin_config,
-		bool test_server = false);
+bool connect_ws_full(websocket::stream<tcp::socket>& ws,
+	const char* host_port_str, const skin_config_t& skin_config,
+	bool test_server);
 
 str_list_t server_list_from_slither_io(const std::string& i33628_txt_str);
 

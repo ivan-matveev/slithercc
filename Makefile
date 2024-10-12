@@ -1,6 +1,7 @@
-ZLIB_LDFLAGS:=$(shell pkg-config --libs zlib)
+ZLIB_LDFLAGS := $(shell pkg-config --libs zlib)
+ZLIB_LDFLAGS += -lbz2
 
-BOOST_VER := 1.67.0
+BOOST_VER := 1.74.0
 BOOST := $(subst .,_,${BOOST_VER})
 BOOST := boost_${BOOST}
 BOOST_LIB_LIST := ${BOOST}_install/lib/libboost_iostreams.a ${BOOST}_install/lib/libboost_system.a
@@ -20,12 +21,12 @@ SLITHERCC_OBJ_LIST := slithercc_boost.o game.o websocket_boost.o connect.o \
 
 slithercc: ${SLITHERCC_OBJ_LIST} ${BOOST_LIB_LIST}
 	${CXX} \
+		-o $@ $^ \
+		${CXX_FLAGS} \
 		-lpthread \
 		-lSDL2 \
 		-lSDL2_ttf \
-		${ZLIB_LDFLAGS} \
-		${CXX_FLAGS} \
-		-o $@ $^
+		${ZLIB_LDFLAGS}
 
 slithercc_replay_server: slithercc_replay_server.o clock.o util.o ${BOOST_LIB_LIST}
 	${CXX} \

@@ -47,7 +47,7 @@ struct screen_sdl_t
 
 	~screen_sdl_t()
 	{
-		for (auto const twh : text_texture_map)
+		for (auto const& twh : text_texture_map)
 			SDL_DestroyTexture(twh.second.texture);
 		for (auto texture : circle_radius_texture_map)
 			if (texture != nullptr)

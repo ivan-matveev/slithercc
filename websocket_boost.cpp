@@ -27,7 +27,7 @@
 #include <boost/beast/core/flat_static_buffer.hpp>
 size_t ws_read(websocket::stream<tcp::socket>& ws, ws_buf_t& buf)
 {
-	boost::beast::flat_static_buffer<buf.size()> buffer;
+	boost::beast::flat_static_buffer<ws_buf_size> buffer;
 	size_t size = 0;
 	try
 	{

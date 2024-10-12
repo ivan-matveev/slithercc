@@ -24,8 +24,8 @@ namespace net = boost::asio;		// from <boost/asio.hpp>
 namespace detail = boost::beast::websocket::detail;
 namespace websocket = beast::websocket; // from <boost/beast/websocket.hpp>
 using tcp = boost::asio::ip::tcp;	   // from <boost/asio/ip/tcp.hpp>
-
-typedef std::array<uint8_t, 1024> ws_buf_t;
+constexpr size_t ws_buf_size = 1024;
+using ws_buf_t = std::array<uint8_t, ws_buf_size>;
 
 bool connect_ws(tcp::resolver& resolver, websocket::stream<tcp::socket>& ws, const char* host_port_str);
 websocket::stream<tcp::socket>

@@ -232,7 +232,7 @@ int main(int argc, const char* argv[])
 	}
 	else if (test_server)
 	{
-		ws = connect_ws(config.test_server.c_str(), skin_config, test_server);
+		connect_ws_full(ws, config.server.c_str(), skin_config, false);
 		if (!ws.is_open())
 		{
 			ERR("connect_ws() failed");
@@ -257,7 +257,7 @@ int main(int argc, const char* argv[])
 		file_write_str("slithercc.server_list", server_list_str);
 		if (config.server.length() == 0)
 			config.server = server_list[0];
-		ws = connect_ws(config.server.c_str(), skin_config);
+		connect_ws_full(ws, config.server.c_str(), skin_config, false);
 		if (!ws.is_open())
 		{
 			ERR("connect_ws() failed");
